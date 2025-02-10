@@ -23,7 +23,7 @@ public class AbilityBase : MonoBehaviour
     {
         if (m_BigCube != null)
         {
-            float rotationAmount = m_rotationSpeed * Time.deltaTime;
+            float rotationAmount = m_rotationSpeed * (Time.deltaTime * 2);
             m_BigCube.transform.Rotate(0, rotationAmount, 0);
         }
     }

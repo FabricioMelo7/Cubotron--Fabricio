@@ -6,13 +6,16 @@ public class GameManager : MonoBehaviour
     public GameObject m_player;
     public GameObject m_bigCubePrefab;
     public GameObject m_smallCubePrefab;
+    public float newFixedDeltaTime = 0.001f;
 
     private Player m_playerScript;
     private GameObject m_BigCube;
     private BigCube m_bigCubeScript;
-
+    
     void Start()
     {
+        Time.fixedDeltaTime = newFixedDeltaTime;
+
         m_playerScript = m_player.GetComponent<Player>();
         m_playerScript.SpawnButtonEvent += CubesSpawn;
         m_playerScript.UnequipButtonEvent += UnEquipCubes;

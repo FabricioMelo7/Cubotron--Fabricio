@@ -37,7 +37,12 @@ public class SmallCube : MonoBehaviour
         m_CurrentHealth = m_HealthPoints;
     }
 
-    private void FixedUpdate()
+    //private void FixedUpdate()
+    //{
+        
+    //}
+
+    private void Update()
     {
         if (m_CurrentHealth > 0f && _isFired is false)
         {

@@ -1,6 +1,6 @@
-using Assets.Scripts;
-using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using CustomEventArgs = Assets.Scripts.CustomEventArgs;
 
 public class Player : MonoBehaviour
 {
@@ -11,16 +11,29 @@ public class Player : MonoBehaviour
 
     private bool m_isCubeEquiped = false;
     internal GameObject m_Cube;
-    internal Enum AbilityEquipped;
+    internal AbilitiesEnum.Ability AbilityEquipped;
     internal Ability1 m_Ability1;
     internal Ability2 m_Ability2;
     internal Ability3 m_Ability3;
+
+    private KeyCode[] abilitiesKeys;
+    
+
+    private readonly AbilitiesEnum.Ability[] abilities =
+    {
+        AbilitiesEnum.Ability.Ability_1,
+        AbilitiesEnum.Ability.Ability_2,
+        AbilitiesEnum.Ability.Ability_3,
+    };
 
     public GameObject m_Hand;
     public float m_Power = 100;
     public KeyCode m_FireKey;
     public GameObject m_PlayerCamera;
     public GameObject m_FirePoint;
+    public KeyCode ability1 = KeyCode.Alpha1;
+    public KeyCode ability2 = KeyCode.Alpha2;
+    public KeyCode ability3 = KeyCode.Alpha3;
 
     void Start()
     {
@@ -28,6 +41,8 @@ public class Player : MonoBehaviour
 
         m_Hand.transform.SetParent(m_PlayerCamera.transform);
         m_FirePoint.transform.SetParent(m_Hand.transform);
+
+        abilitiesKeys = new KeyCode[] { ability1, ability2, ability3 };
 
         m_Ability1 = GetComponent<Ability1>();
         m_Ability2 = GetComponent<Ability2>();
@@ -71,67 +86,71 @@ public class Player : MonoBehaviour
 
     private void HandleKeyboardInput()
     {
-        if (Input.GetKeyDown(KeyCode.U) && m_isCubeEquiped == true)
+        //Handle Unequip
+        if (Input.GetKeyDown(KeyCode.U) && m_isCubeEquiped)
         {
-            UnequipButtonEvent?.Invoke(this, null);
-            m_isCubeEquiped = false;
-            AbilityEquipped = AbilitiesEnum.Ability.None;
-        }
-        else if (Input.GetKeyUp(KeyCode.Alpha1) && AbilityEquipped is not AbilitiesEnum.Ability.Ability_1)
-        {
-            AbilityEquipped = AbilitiesEnum.Ability.Ability_1;
-            m_isCubeEquiped = true;
-            SpawnCubes();
-        }
-        else if (Input.GetKeyUp(KeyCode.Alpha2) && AbilityEquipped is not AbilitiesEnum.Ability.Ability_2)
-        {
-            AbilityEquipped = AbilitiesEnum.Ability.Ability_2;
-            m_isCubeEquiped = true;
-            SpawnCubes();
-        }
-        else if (Input.GetKeyUp(KeyCode.Alpha3) && AbilityEquipped is not AbilitiesEnum.Ability.Ability_3)
-        {
-            AbilityEquipped = AbilitiesEnum.Ability.Ability_3;
-            m_isCubeEquiped = true;
-            SpawnCubes();
+            Unequip();
+            return;
         }
 
-        if (Input.GetKeyUp(m_FireKey) && m_isCubeEquiped == true && AbilityEquipped.Equals(AbilitiesEnum.Ability.Ability_1))
+        //Handdle ability selection
+        for (int i = 0; i < abilitiesKeys.Length; i++)
         {
-            FireCubes();
+            if (Input.GetKeyUp(abilitiesKeys[i]) && AbilityEquipped != abilities[i])
+            {
+                EquipAbility(abilities[i]);
+                return;
+            }
         }
 
-        if (Input.GetKey(m_FireKey) && m_isCubeEquiped == true && AbilityEquipped.Equals(AbilitiesEnum.Ability.Ability_2))
+        if (m_isCubeEquiped)
         {
-            FireCubes();
-        }
+            if (Input.GetKeyUp(m_FireKey))
+            {
+                if (AbilityEquipped == AbilitiesEnum.Ability.Ability_1)
+                {
+                    FireCubes();
+                }
 
-        if (Input.GetKeyDown(m_FireKey) && m_isCubeEquiped == true && AbilityEquipped.Equals(AbilitiesEnum.Ability.Ability_3))
-        {
-            FireCubes();
-        }
+                else if (AbilityEquipped == AbilitiesEnum.Ability.Ability_3)
+                {
+                    m_Ability3.StopScalingAndFireCube(m_Power, m_FirePoint);
+                }                
+            }
 
-        if (Input.GetKeyUp(m_FireKey) && m_isCubeEquiped == true && AbilityEquipped.Equals(AbilitiesEnum.Ability.Ability_3))
-        {
-            m_Ability3.StopScalingAndFireCube(m_Power, m_FirePoint);
+            if(AbilityEquipped == AbilitiesEnum.Ability.Ability_3 && Input.GetKeyDown(m_FireKey))
+            {               
+                FireCubes();
+            }
+
+            if (Input.GetKey(m_FireKey) && AbilityEquipped == AbilitiesEnum.Ability.Ability_2)
+            {
+                FireCubes();
+            }
         }
     }
 
     private void FireCubes()
     {
-        switch (AbilityEquipped)
+        FireCubesEvent?.Invoke(this, new CustomEventArgs
         {
-            case AbilitiesEnum.Ability.Ability_1:
-                FireCubesEvent?.Invoke(this, new CustomEventArgs { power = m_Power, obj = m_PlayerCamera, Ability = AbilityEquipped });
-                break;
+            power = m_Power,
+            obj = m_FirePoint,
+            Ability = AbilityEquipped
+        });
+    }
 
-            case AbilitiesEnum.Ability.Ability_2:
-                FireCubesEvent?.Invoke(this, new CustomEventArgs { power = m_Power, obj = m_FirePoint, Ability = AbilityEquipped });
-                break;
+    private void EquipAbility(AbilitiesEnum.Ability ability)
+    {
+        AbilityEquipped = ability;
+        m_isCubeEquiped = true;
+        SpawnCubes();
+    }
 
-            case AbilitiesEnum.Ability.Ability_3:
-                FireCubesEvent?.Invoke(this, new CustomEventArgs { power = m_Power, obj = m_FirePoint, Ability = AbilityEquipped });
-                break;
-        }
+    private void Unequip()
+    {
+        UnequipButtonEvent?.Invoke(this, null);
+        m_isCubeEquiped = false;
+        AbilityEquipped = AbilitiesEnum.Ability.None;
     }
 }

@@ -11,7 +11,11 @@ public class Ability1 : AbilityBase
 
     void Update()
     {
+       
+    }
 
+    private void FixedUpdate()
+    {
         if (m_BigCube != null)
         {
             RotateBigCube();
